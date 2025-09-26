@@ -133,7 +133,7 @@ Verification (backend → facilitator)
   - `filename` (text) — path under STORAGE_DIR
   - `content_hash` (text, hex keccak256)
   - `price_usdc_cents` (int)
-  - `keywords` (text, csv or json)
+  - `keywords` (text, JSON array of strings)
   - `nft_token_id` (int, nullable until minted)
   - `creator_address` (text)
   - `created_at` (datetime)
@@ -155,7 +155,7 @@ Storage
 ### API Specification (FastAPI)
 - POST `/upload`
   - Form/multipart: `file` (.md), `title` (string), `creator_address` (0x...)
-  - Flow: validate → read bytes → keccak256 → evaluate price/keywords → create DB record (nft_token_id null) → return evaluated data
+  - Flow: validate → read bytes → keccak256 → call Evaluator Agent → persist returned `price_usdc_cents` and `keywords` (JSON) → create DB record (nft_token_id null) → return evaluated data
   - Response 200
 ```json
 {
@@ -179,11 +179,15 @@ Storage
 
 - GET `/content/{id}`
   - Without Authorization: return HTTP 402 with invoice in `WWW-Authenticate` and JSON body; create `purchases` row with `invoice_id`
-  - With `Authorization: X402 <token>`: verify via facilitator; if valid, return full markdown content
+  - With `Authorization: X402 <token>`: verify via facilitator; if valid, return full markdown content and the saved `keywords`
   - Response 200
 ```json
 { "id": 123, "title": "...", "markdown": "# full content..." }
 ```
+
+- POST `/reevaluate/{id}`
+  - Body: `{ force: boolean }` (optional)
+  - Flow: fetch article → call Evaluator Agent with current markdown → update `price_usdc_cents` and `keywords` in DB → return updated fields
 
 - POST `/x402/verify` (internal proxy, optional)
   - Body: `{ token, invoice_id }`
@@ -285,7 +289,7 @@ cd verdian-web && npm i && npm run dev
 ### Build Steps
 - Initialize repos (backend, contract, frontend); env wiring; SQLite schema; storage dir.
 - Stand up Evaluator Agent (Gemini-first with heuristic fallback) and Creator Agent; expose `/evaluate` and `/assist`.
-- Implement upload + keccak; call Evaluator Agent; show evaluated price/keywords; optional Creator Assist step.
+- Implement upload + keccak; call Evaluator Agent; persist price/keywords; show evaluated values; optional Creator Assist step.
 - Deploy contract to Amoy; implement mint endpoint and integrate Web3.
 - Implement discovery `/content` and gated `/content/{id}` (402 + x402 verify).
 - Build frontend: upload, creator assist, list, detail, purchase; integrate paywall flow.
