@@ -68,7 +68,7 @@
 ```bash
 cd agents/creator
 python -m venv .venv && source .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install -r ../requirements.txt
 export GEMINI_API_KEY=YOUR_KEY   # optional
 python -m uvicorn main:app --host 0.0.0.0 --port 8082
 ```
