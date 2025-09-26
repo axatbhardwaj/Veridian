@@ -146,6 +146,7 @@ def _sanitize_keywords(keywords: List[str], max_keywords: int = 10) -> List[str]
 
 def _call_gemini(title: str, markdown: str) -> Optional[EvaluateResponse]:
     if not GEMINI_API_KEY:
+        logging.warning("GEMINI_API_KEY not set; using heuristic fallback")
         return None
     try:
         import google.generativeai as genai
@@ -157,7 +158,6 @@ def _call_gemini(title: str, markdown: str) -> Optional[EvaluateResponse]:
             f"Title: {title}\n\n"
             "Markdown (truncated if very long):\n" + markdown[:8000]
         )
-        logging.info("Gemini prompt:\n%s", prompt)
         resp = model.generate_content(
             prompt,
             generation_config=genai.types.GenerationConfig(
@@ -166,7 +166,7 @@ def _call_gemini(title: str, markdown: str) -> Optional[EvaluateResponse]:
             ),
         )
         text = getattr(resp, "text", "").strip()
-        logging.info("Gemini response:\n%s", text)
+        logging.info("Gemini response received (%d chars)", len(text))
         if not text:
             return None
         data = json.loads(text)
@@ -176,7 +176,7 @@ def _call_gemini(title: str, markdown: str) -> Optional[EvaluateResponse]:
             return EvaluateResponse(price_usdc_cents=price, keywords=keywords)
         return None
     except Exception:
-        # Lowest-level catch to allow heuristic fallback
+        logging.exception("Gemini call failed in Evaluator Agent")
         return None
 
 
