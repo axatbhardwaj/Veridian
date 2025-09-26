@@ -64,7 +64,7 @@ Non-goals
 - DB: SQLite (SQLModel or SQLAlchemy)
 - Web3: `web3.py`
 - Crypto: `eth_utils` for keccak256
-- Evaluator Agent: external FastAPI service (HTTP) returning price and keywords; prefers Gemini (`GEMINI_API_KEY`) with fallback to local heuristic if unavailable
+- Evaluator Agent: external FastAPI service (HTTP) returning price and up to 10 keywords; prefers Gemini (`GEMINI_API_KEY`, default model `gemini-2.5-pro`) with fallback to local heuristic if unavailable
 - Creator Agent: external FastAPI service (HTTP) that assists creators with title, summary, keywords, and price suggestions via Gemini
 
 Responsibilities
@@ -84,6 +84,7 @@ Environment variables
 - `BACKEND_BASE_URL`
 - `STORAGE_DIR` (e.g., ./storage)
 - `GEMINI_API_KEY` (preferred; free tier)
+- `GEMINI_MODEL` (default: `gemini-2.5-pro`)
 - `OPENAI_API_KEY` (optional)
 
 ---
@@ -203,8 +204,8 @@ Error model
     - Request JSON: `{ "title": string, "markdown": string }`
     - Response JSON: `{ "price_usdc_cents": number, "keywords": string[] }`
 - Behavior:
-  - Primary model: Gemini (via `GEMINI_API_KEY`). Deterministic prompt to return JSON.
-  - Fallback heuristic: price by word count and unique word ratio (clamp $1–$5), keywords by frequency after stopword removal (top 2–3).
+  - Primary model: Gemini (via `GEMINI_API_KEY`, default `gemini-2.5-pro`). Deterministic prompt to return JSON.
+  - Fallback heuristic: price by word count and unique word ratio (clamp $1–$5), keywords by frequency after stopword removal (top up to 10).
 - Error handling:
   - 400 on invalid input; 500 on internal errors.
 - Integration:

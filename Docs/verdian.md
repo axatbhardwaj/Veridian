@@ -19,7 +19,7 @@ The system is composed of four primary components: a user-facing frontend, a sma
     * **AI Evaluation:**  
       * Analyzes the content using an LLM to assess quality, originality, and subject matter complexity.  
       * Sets a fair price (e.g., between $1-$5 in USDC).  
-      * Generates 2-3 relevant keywords for discoverability.  
+      * Generates up to 10 relevant keywords for discoverability.  
     * **Tokenization:** Interacts with the smart contract to mint the content NFT.  
     * **Listing:** Stores the article, its price, NFT ID, and keywords in a database, making it available for purchase.  
     * **API for Discovery:** Provides a public /content endpoint that other agents can query to find available articles based on keywords.  
