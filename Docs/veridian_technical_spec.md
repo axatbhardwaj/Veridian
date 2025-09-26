@@ -64,7 +64,8 @@ Non-goals
 - DB: SQLite (SQLModel or SQLAlchemy)
 - Web3: `web3.py`
 - Crypto: `eth_utils` for keccak256
-- Evaluator Agent: external FastAPI service (HTTP) returning price and keywords; fallback to local heuristic if unavailable
+- Evaluator Agent: external FastAPI service (HTTP) returning price and keywords; prefers Gemini (`GEMINI_API_KEY`) with fallback to local heuristic if unavailable
+- Creator Agent: external FastAPI service (HTTP) that assists creators with title, summary, keywords, and price suggestions via Gemini
 
 Responsibilities
 - Content ingestion, validation, hashing
@@ -82,6 +83,7 @@ Environment variables
 - `EVALUATOR_AGENT_URL` (base URL for Evaluator Agent)
 - `BACKEND_BASE_URL`
 - `STORAGE_DIR` (e.g., ./storage)
+- `GEMINI_API_KEY` (preferred; free tier)
 - `OPENAI_API_KEY` (optional)
 
 ---
@@ -90,6 +92,7 @@ Environment variables
 - Stack: Vite + React + Wagmi/viem for wallet connect (or simple EOA display if only backend mints)
 - Pages
   - Upload: connect wallet, upload .md, preview AI-evaluated price/keywords, confirm mint
+  - Creator Assist: optional step that calls Creator Agent for title/summary/keywords/price suggestions
   - Marketplace: list items (title, price, keywords)
   - Detail: view limited preview; trigger purchase; show post-purchase content
 - Calls backend APIs; no direct contract calls needed (backend signs mint)
@@ -200,16 +203,25 @@ Error model
     - Request JSON: `{ "title": string, "markdown": string }`
     - Response JSON: `{ "price_usdc_cents": number, "keywords": string[] }`
 - Behavior:
-  - Default heuristic (deterministic, no external deps):
-    - Price by word count and unique word ratio; clamp $1–$5.
-    - Keywords by frequency after stopword removal; top 2–3.
-  - Optional LLM enhancement if `OPENAI_API_KEY` present.
+  - Primary model: Gemini (via `GEMINI_API_KEY`). Deterministic prompt to return JSON.
+  - Fallback heuristic: price by word count and unique word ratio (clamp $1–$5), keywords by frequency after stopword removal (top 2–3).
 - Error handling:
   - 400 on invalid input; 500 on internal errors.
 - Integration:
   - Backend calls `EVALUATOR_AGENT_URL` `/evaluate`; if unavailable, fallback to local heuristic.
 
 ---
+
+### Creator Agent (Service)
+- Purpose: Help creators improve metadata and pricing.
+- Deployment: FastAPI microservice (can be same process as Evaluator).
+- Interface:
+  - POST `/assist`
+    - Request JSON: `{ "title": string, "markdown": string }`
+    - Response JSON: `{ "title": string, "summary": string, "keywords": string[], "suggested_price_usdc_cents": number }`
+- Behavior:
+  - Uses Gemini (via `GEMINI_API_KEY`) with a concise system prompt to extract summary, keywords, and price suggestion.
+  - Constrain output with JSON schema; reject if missing fields.
 
 ### Consumer Agent (MVP)
 - Python script/service:
@@ -236,11 +248,13 @@ Error model
 Backend
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install fastapi uvicorn[standard] sqlmodel web3 eth-utils python-multipart pydantic
+pip install fastapi uvicorn[standard] sqlmodel web3 eth-utils python-multipart pydantic google-generativeai
 export WEB3_PROVIDER_URL=...
 export CONTRACT_ADDRESS=...
 export CONTRACT_OWNER_PRIVATE_KEY=...
 export X402_FACILITATOR_URL=...
+export EVALUATOR_AGENT_URL=http://localhost:8081
+export GEMINI_API_KEY=...
 export STORAGE_DIR=./storage
 uvicorn app.main:app --reload
 ```
@@ -269,10 +283,11 @@ cd verdian-web && npm i && npm run dev
 
 ### Build Steps
 - Initialize repos (backend, contract, frontend); env wiring; SQLite schema; storage dir.
-- Implement upload + keccak + call Evaluator Agent; show evaluated price/keywords.
+- Stand up Evaluator Agent (Gemini-first with heuristic fallback) and Creator Agent; expose `/evaluate` and `/assist`.
+- Implement upload + keccak; call Evaluator Agent; show evaluated price/keywords; optional Creator Assist step.
 - Deploy contract to Amoy; implement mint endpoint and integrate Web3.
 - Implement discovery `/content` and gated `/content/{id}` (402 + x402 verify).
-- Build frontend: upload, list, detail, purchase; integrate paywall flow.
+- Build frontend: upload, creator assist, list, detail, purchase; integrate paywall flow.
 - Integrate x402 facilitator and verification proxy.
 - Implement Consumer Agent script (discover → 402 → pay → retry).
 - Add basic tests and prepare demo runbook.
