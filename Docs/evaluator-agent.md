@@ -73,6 +73,13 @@ curl -s http://localhost:8081/healthz | jq
 
 ---
 
+### Integration
+- The Evaluator Agent is a standalone service.
+- In the current architecture, it is called directly by the **Client Agent** (`demo/` script) for content discovery before the purchase flow is initiated.
+- It can also be called by a content ingestion service (like the conceptual **Resource Server**) to price articles upon upload.
+
+---
+
 ### Notes
 - Max markdown size is 256 KB.
 - Price is clamped to $1–$5 (100–500 cents).

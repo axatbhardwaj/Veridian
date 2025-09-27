@@ -1,5 +1,7 @@
 ### Verdian Creator Agent
 
+> **Note**: This agent is a conceptual design for a planned feature. Its implementation is not included in the current codebase.
+
 ---
 
 ### Overview
