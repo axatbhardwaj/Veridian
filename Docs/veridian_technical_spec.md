@@ -26,7 +26,7 @@ The system is composed of several decoupled services that communicate over HTTP:
 
 - **Frontend (React/Vite)**: UI for wallet connection, content upload, and marketplace browsing. Found in `client/ai-lens-labs`.
 - **Resource Server (Node/Express)**: The primary backend responsible for content storage, listing, and enforcing the 402 paywall. See `Docs/resource-server.md` for full details. Found in `client/ai-lens-labs/server`.
-- **Evaluator Agent (FastAPI/Python)**: A standalone microservice that uses AI (Gemini) to assign a fair price and relevant keywords to markdown content.
+- **Evaluator Agent (Node/Express)**: A standalone microservice that uses AI (Gemini) to assign a fair price and relevant keywords to markdown content.
 - **Service Agent (Node/Express)**: An A2A (Application-to-Application) proxy that forwards payment-related headers (`X-PAYMENT`) from a client to the Resource Server.
 - **Client Agent (Demo Script)**: A script that orchestrates the discovery and purchase flow by calling the Evaluator Agent and then the Service Agent.
 - **Smart Contract (Solidity, Polygon Amoy)**: Non-transferable ERC-721-like content token storing `keccak256(content)` in metadata.
@@ -87,7 +87,7 @@ Non-goals
 
 #### Evaluator Agent (AI Service)
 - **Implementation**: `agents/evaluator/`
-- **Stack**: Python, FastAPI
+- **Stack**: Node.js, Express
 - **Responsibilities**:
   - Expose an `/evaluate` endpoint to price content and extract keywords.
   - Expose a `/match_topic` endpoint to find the best content hash for a given topic.
@@ -165,7 +165,7 @@ See `Docs/resource-server.md` for a complete API specification.
 
 ### Evaluator Agent (Service)
 - Purpose: Assign price ($1–$5 USD) and 2–3 keywords for uploaded markdown.
-- Deployment: Separate FastAPI microservice (can run in-process for hackathon).
+- Deployment: Separate Node.js/Express microservice.
 - Interface:
   - POST `/evaluate`
     - Request JSON: `{ "title": string, "markdown": string }`
