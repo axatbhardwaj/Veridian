@@ -23,7 +23,7 @@ export default function Upload() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.name.endsWith('.md')) {
+      if (selectedFile.name.endsWith('.md') || selectedFile.name.endsWith('.mdx') ) {
         setFile(selectedFile);
       } else {
         toast({
