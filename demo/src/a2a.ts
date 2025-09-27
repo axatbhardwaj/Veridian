@@ -1,5 +1,5 @@
 import axios from "axios";
-import { createDemoPaymentPayload, encodePaymentPayload } from "./payment.js";
+import { createDemoPaymentPayload, encodePaymentPayload } from "./payment.ts";
 export async function fetchContentByHash(serviceUrl: string, hash: string) {
   const client = axios.create({ baseURL: serviceUrl, timeout: 15000 });
 

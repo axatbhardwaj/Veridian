@@ -1,4 +1,4 @@
-import { fetchContentByHash } from "./a2a.js";
+import { fetchContentByHash } from "./a2a.ts";
 
 async function main() {
   const SERVICE_AGENT_URL =
