@@ -6,11 +6,11 @@ This document describes how to set up environment variables for the Veridian pro
 
 The Veridian project consists of multiple services, each requiring their own environment configuration:
 
-- **Agents** (`/agents/`) - AI evaluation service
-- **Facilitator** (`/facilitator-amoy/`) - Payment facilitation service  
-- **Demo** (`/demo/`) - Demo application
-- **Service** (`/service/`) - Main service layer
-- **Client Server** (`/client/ai-lens-labs/server/`) - Client-side server
+- **Evaluator Agent** (`/agents/evaluator/`) - AI evaluation service
+- **Veridian Service** (`/service/`) - Unified backend service
+- **Demo Client** (`/demo/`) - Demo application for testing
+- **x402 Facilitator** (`/facilitator-amoy/`) - Payment facilitation service
+- **Frontend** (`/client/ai-lens-labs/`) - React frontend application
 
 ## Setup Instructions
 
@@ -32,7 +32,7 @@ cp .env.example .env
 
 ## Service-Specific Configuration
 
-### Agents (`/agents/.env`)
+### Evaluator Agent (`/agents/evaluator/.env`)
 
 Required for the AI evaluation service:
 
@@ -43,16 +43,56 @@ GEMINI_MODEL=gemini-2.5-pro
 
 # Server Configuration
 PORT=8000
+
+# Service Integration
+RESOURCE_SERVER_URL=http://localhost:5402
 ```
 
-### Facilitator (`/facilitator-amoy/.env`)
+### Veridian Service (`/service/.env`)
+
+Required for the unified backend service:
+
+```bash
+# Server Configuration
+PORT=5402
+NODE_ENV=development
+
+# Database Configuration (SQLite by default)
+DATABASE_URL="file:./dev.db"
+
+# Blockchain Configuration
+ADDRESS=0xA7635CdB2B835737FdcE78Ea22F06Fb78101110f
+FACILITATOR_URL=http://localhost:5401
+AMOY_USDC_ADDRESS=0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582
+
+# Gemini AI Configuration (for evaluator agent)
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-pro
+```
+
+### Demo Client (`/demo/.env`)
+
+Required for demo functionality:
+
+```bash
+# Service URLs
+SERVICE_AGENT_URL=http://localhost:5402
+MATCH_TOPIC_URL=http://127.0.0.1:8000/match_topic
+
+# Demo Payment Configuration
+PRIVATE_KEY=0x95a79e8336434ff65801b2dd78d4f0d921c06d9d648a2e4e462174a58d5ebe0a
+PRIVATE_KEY_ADDRESS=0xA7635CdB2B835737FdcE78Ea22F06Fb78101110f
+PAYMENT_AMOUNT=10000
+```
+
+### x402 Facilitator (`/facilitator-amoy/.env`)
 
 Required for payment processing:
 
 ```bash
-# Private Key (required for blockchain transactions)
-FACILITATOR_PRIVATE_KEY=your_actual_private_key_here
-PRIVATE_KEY=your_actual_private_key_here
+# Facilitator Configuration
+FACILITATOR_PRIVATE_KEY=0x95a79e8336434ff65801b2dd78d4f0d921c06d9d648a2e4e462174a58d5ebe0a
+PRIVATE_KEY=0x95a79e8336434ff65801b2dd78d4f0d921c06d9d648a2e4e462174a58d5ebe0a
 
 # Network Configuration
 AMOY_RPC_URL=https://rpc-amoy.polygon.technology
@@ -62,46 +102,16 @@ AMOY_USDC_ADDRESS=0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582
 PORT=5401
 ```
 
-### Demo (`/demo/.env`)
+### Frontend (`/client/ai-lens-labs/.env`)
 
-Required for demo functionality:
-
-```bash
-# Private Key (required for demo transactions)
-PRIVATE_KEY=your_actual_private_key_here
-
-# Service URLs
-SERVICE_AGENT_URL=http://localhost:5402
-MATCH_TOPIC_URL=http://127.0.0.1:8000/match_topic
-AGENT_CARD_PATH=
-
-# Payment Configuration
-PAYMENT_AMOUNT=10000
-PRIVATE_KEY_ADDRESS=your_wallet_address_here
-```
-
-### Service (`/service/.env`)
+Required for the React frontend application:
 
 ```bash
-# Service Configuration
-RESOURCE_SERVER_URL=your_resource_server_url
-ENDPOINT_PATH=/premium/summarize
+# API Endpoints
+VITE_API_URL=http://localhost:5402
+VITE_EVALUATOR_URL=http://localhost:8000
 
-# Server Configuration
-PORT=5402
-```
-
-### Client Server (`/client/ai-lens-labs/server/.env`)
-
-```bash
-# Server Configuration
-PORT=3001
-NODE_ENV=development
-
-# Contract Configuration
-ADDRESS=0xA7635CdB2B835737FdcE78Ea22F06Fb78101110f
-FACILITATOR_URL=http://localhost:5401
-AMOY_USDC_ADDRESS=0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582
+# Additional frontend configuration can be added here
 ```
 
 ## Security Best Practices
