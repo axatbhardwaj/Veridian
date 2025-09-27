@@ -48,7 +48,8 @@ curl -s http://localhost:8000/healthz | jq
 ```json
 {
   "price_usdc_cents": 300,
-  "keywords": ["zk", "rollups", "polygon"]
+  "keywords": ["zk", "rollups", "polygon"],
+  "gemini": true
 }
 ```
 
@@ -61,6 +62,7 @@ curl -s http://localhost:8000/healthz | jq
 
 ### Behavior
 - Gemini-first, expecting a JSON response.
+- Response includes `gemini: true` if AI was used, `gemini: false` if heuristics were used.
 - Fallback (if Gemini not configured/unavailable):
   - keywords: frequency-based (stopwords removed), up to 10, normalized to lowercase
   - price: based on word count and uniqueness ratio, clamped 100–500 cents
@@ -94,6 +96,7 @@ curl -s http://localhost:8000/healthz | jq
 - Max markdown size is 256 KB.
 - Price is clamped to $1–$5 (100–500 cents).
 - Keywords are normalized to lowercase and limited to up to 10.
+- Response includes `gemini` boolean field indicating whether AI analysis was used.
 
 ---
 

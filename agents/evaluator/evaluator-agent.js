@@ -133,8 +133,11 @@ app.post('/evaluate', async (req, res) => {
   };
 
   const geminiResult = await callGemini(title, markdown);
-  
-  return res.json(geminiResult || baseline);
+
+  const result = geminiResult || baseline;
+  result.gemini = !!geminiResult; // true if Gemini was used, false if heuristics
+
+  return res.json(result);
 });
 
 app.post('/match_topic', async (req, res) => {

@@ -169,9 +169,10 @@ See `Docs/resource-server.md` for a complete API specification.
 - Interface:
   - POST `/evaluate`
     - Request JSON: `{ "title": string, "markdown": string }`
-    - Response JSON: `{ "price_usdc_cents": number, "keywords": string[] }`
+    - Response JSON: `{ "price_usdc_cents": number, "keywords": string[], "gemini": boolean }`
 - Behavior:
   - Primary model: Gemini (via `GEMINI_API_KEY`, default `gemini-2.5-pro`). Deterministic prompt to return JSON.
+  - Response includes `gemini: boolean` field indicating whether AI analysis was used.
   - Fallback heuristic: price by word count and unique word ratio (clamp $1–$5), keywords by frequency after stopword removal (top up to 10).
 - Error handling:
   - 400 on invalid input; 500 on internal errors.
