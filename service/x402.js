@@ -2,7 +2,7 @@ const axios = require("axios");
 
 const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:5401";
 
-function buildPaymentRequirements(resourceUrl, payTo, asset) {
+function buildPaymentRequirements(resourceUrl, payTo, asset, contentPriceCents = 100000) {
   return {
     scheme: "exact",
     network: "polygon-amoy",
@@ -10,7 +10,7 @@ function buildPaymentRequirements(resourceUrl, payTo, asset) {
     description: "Premium Endpoint: Requires payment to be processed",
     mimeType: "application/json",
     payTo,
-    maxAmountRequired: "100000",
+    maxAmountRequired: contentPriceCents.toString(),
     maxTimeoutSeconds: 120,
     asset,
     extra: { name: "USDC", version: "2" },
