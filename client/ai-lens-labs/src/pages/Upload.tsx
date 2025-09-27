@@ -140,9 +140,13 @@ export default function Upload() {
             description: `Generated ${fallbackResult.keywords?.length || 0} keywords`,
           });
           
+          const fallbackPrice = fallbackResult.price_per_call && fallbackResult.price_per_call > 0 
+            ? fallbackResult.price_per_call 
+            : 0.01;
+            
           return {
             keywords: fallbackResult.keywords || [],
-            price: fallbackResult.price_per_call || 0.01
+            price: fallbackPrice
           };
         }
         
@@ -160,18 +164,25 @@ export default function Upload() {
         description: `Generated ${result.keywords?.length || 0} keywords with smart pricing`,
       });
       
-      // Handle both response formats
+      // Handle both response formats and ensure valid price
+      let calculatedPrice = 0.01; // Default fallback price
+      
       if (useNewEndpoint && result.price_usdc_cents) {
-        return {
-          keywords: result.keywords || [],
-          price: result.price_usdc_cents / 100.0 // Convert cents to dollars
-        };
-      } else {
-        return {
-          keywords: result.keywords || [],
-          price: result.price_per_call || 0.01
-        };
+        calculatedPrice = result.price_usdc_cents / 100.0; // Convert cents to dollars
+      } else if (result.price_per_call) {
+        calculatedPrice = result.price_per_call;
       }
+      
+      // Ensure price is always valid (greater than 0)
+      if (!calculatedPrice || calculatedPrice <= 0) {
+        console.warn('Invalid price received from API, using fallback price of 0.01');
+        calculatedPrice = 0.01;
+      }
+      
+      return {
+        keywords: result.keywords || [],
+        price: calculatedPrice
+      };
     } catch (error: any) {
       console.error('Error generating keywords:', error);
       
@@ -188,9 +199,14 @@ export default function Upload() {
     }
   };
 
-  const mintNFT = async (title: string, keywords: string[], contentHash: string, tokenUri: string): Promise<string | null> => {
+  const mintNFT = async (title: string, keywords: string[], contentHash: string, tokenUri: string, price: number): Promise<string | null> => {
     if (!provider || !account) {
       throw new Error('Wallet not connected');
+    }
+
+    // Validate price parameter
+    if (!price || price <= 0) {
+      throw new Error('Invalid price provided. Price must be greater than zero.');
     }
 
     try {
@@ -218,7 +234,11 @@ export default function Upload() {
       const cleanHash = contentHash.replace('0x', '').padStart(64, '0');
       const contentHashBytes32 = '0x' + cleanHash;
       
-      const priceUsdcCents = Math.round((calculatedPrice || 0.01) * 100); // Convert price to cents
+      const priceUsdcCents = Math.round(price * 100); // Convert price to cents
+      
+      // Debug logging for price validation
+      console.log('Price validation - price parameter:', price);
+      console.log('Price validation - priceUsdcCents:', priceUsdcCents);
       
       // Validate parameters before minting
       if (priceUsdcCents <= 0) {
@@ -326,11 +346,13 @@ export default function Upload() {
         } else if (gasError.data === '0x9c2e4a38') {
           throw new Error('Insufficient payment sent. Please ensure you have enough ETH for the mint fee.');
         } else if (gasError.data === '0x00bfc921') {
-          throw new Error('Invalid price provided. Please ensure the price is greater than zero.');
+          // This is the specific error we're seeing - add more debugging
+          console.error('Price validation failed in contract. Debug info:');
+          console.error('  Price parameter passed:', price);
+          console.error('  PriceUsdcCents calculated:', priceUsdcCents);
+          throw new Error(`Invalid price provided. Contract rejected price ${priceUsdcCents} cents (${price} USD). Please try again or contact support.`);
         } else if (gasError.data === '0xd1a57ed6') {
           throw new Error('Cannot send to zero address.');
-        } else if (gasError.data === '0x30cd7471') {
-          throw new Error('Content with this hash already exists.');
         } else if (gasError.reason) {
           throw new Error(`Contract error: ${gasError.reason}`);
         } else if (gasError.message?.includes('execution reverted')) {
@@ -486,8 +508,16 @@ export default function Upload() {
       // First, generate keywords and calculate price using AI
       const { keywords: aiKeywords, price } = await generateKeywordsAndPrice(title, fileContent);
       
+      // Ensure we have a valid price before proceeding
+      if (!price || price <= 0) {
+        throw new Error('Failed to generate a valid price. Please try again.');
+      }
+      
       setGeneratedKeywords(aiKeywords);
       setCalculatedPrice(price);
+      
+      // Small delay to ensure state is updated
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       console.log('AI Generated Keywords:', aiKeywords);
       console.log('Calculated Price:', price);
@@ -511,7 +541,7 @@ export default function Upload() {
       let tokenId: string | null = null;
       try {
         const tokenUri = `https://veridian-api.com/metadata/${contentHash}`; // Generate metadata URI
-        tokenId = await mintNFT(title, finalKeywords, contentHash, tokenUri);
+        tokenId = await mintNFT(title, finalKeywords, contentHash, tokenUri, price);
         
         console.log('NFT minted successfully with token ID:', tokenId);
         
