@@ -3,6 +3,10 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
 
 // --- App Setup ---
 const app = express();
