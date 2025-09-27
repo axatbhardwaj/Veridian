@@ -9,6 +9,11 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  preview: {
+    host: "0.0.0.0",          // allow external access
+    port: 8080,               // port for preview
+    allowedHosts: ["veridian.shubh.sh"], // add your domain here
+  },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {
