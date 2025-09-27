@@ -1,0 +1,19 @@
+{
+  "name": "veridian-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "agents/evaluator",
+    "client/ai-lens-labs",
+    "client/ai-lens-labs/server",
+    "demo",
+    "service"
+  ],
+  "scripts": {
+    "dev:evaluator": "bun --watch agents/evaluator/evaluator-agent.js",
+    "dev:resource-server": "bun --watch client/ai-lens-labs/server/index.js",
+    "dev:service": "bun --watch service/src/index.ts",
+    "dev:client": "cd client/ai-lens-labs && bun run dev",
+    "dev": "bun run --parallel \"bun:dev:*\""
+  }
+}
