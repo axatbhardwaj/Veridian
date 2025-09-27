@@ -1,23 +1,26 @@
 {
-  "name": "service-agent-demo",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
+  "name": "veridian-service",
+  "version": "1.0.0",
+  "description": "Unified Veridian backend service with content management and payment processing",
+  "main": "index.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node dist/index.js",
-    "dev": "ts-node-esm src/index.ts"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push"
   },
   "dependencies": {
+    "@prisma/client": "^6.16.2",
     "axios": "^1.5.0",
     "body-parser": "^1.20.2",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "js-sha3": "^0.9.3",
+    "multer": "^2.0.2",
+    "prisma": "^6.16.2"
   },
   "devDependencies": {
-    "@types/body-parser": "^1.19.6",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3"
+    "nodemon": "^3.1.10"
   }
 }

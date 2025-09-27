@@ -592,7 +592,7 @@ export default function Upload() {
         setProgress(50);
         
         // Call the API endpoint
-        const response = await fetch('http://localhost:3001/api/upload', {
+        const response = await fetch('http://localhost:5402/api/upload', {
           method: 'POST',
           body: formData,
         });
