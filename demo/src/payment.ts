@@ -43,8 +43,8 @@ export async function createDemoPaymentPayload(from: string, to: string, value: 
     nonce: payload.nonce
   };
 
-  const privateKey = process.env.PRIVATE_KEY || '0x95a79e8336434ff65801b2dd78d4f0d921c06d9d648a2e4e462174a58d5ebe0a';
-  if (!privateKey) throw new Error('PRIVATE_KEY required for demo payment generation');
+  const privateKey = process.env.PRIVATE_KEY;
+  if (!privateKey) throw new Error('PRIVATE_KEY environment variable is required for demo payment generation');
   const wallet = new ethers.Wallet(privateKey);
 
   // Ensure verifyingContract is a valid address to avoid ENS lookup in signTypedData

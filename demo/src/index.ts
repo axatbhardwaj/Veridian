@@ -6,7 +6,7 @@ async function main() {
   const MATCH_TOPIC_URL =
     process.env.MATCH_TOPIC_URL || "http://127.0.0.1:8000/match_topic";
 
-  const topic = "Transformers"; 
+  const topic = "arch"; 
 
   try {
     const matchResp = await fetch(MATCH_TOPIC_URL, {
