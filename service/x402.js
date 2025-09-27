@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const FACILITATOR_URL = process.env.FACILITATOR_URL || "http://localhost:5401";
+const FACILITATOR_URL = process.env.FACILITATOR_URL || "https://facilitator.shubh.sh";
 
 function buildPaymentRequirements(resourceUrl, payTo, asset, contentPriceCents = 100000) {
   return {

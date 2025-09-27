@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5402;
 
 const ADDRESS = process.env.ADDRESS || '0xA7635CdB2B835737FdcE78Ea22F06Fb78101110f';
-const FACILITATOR_URL = process.env.FACILITATOR_URL || 'http://localhost:5401';
+const FACILITATOR_URL = process.env.FACILITATOR_URL || 'https://facilitator.shubh.sh';
 const AMOY_USDC_ADDRESS = process.env.AMOY_USDC_ADDRESS || '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582';
 
 // Middleware
@@ -240,7 +240,7 @@ app.get('/api/content/:hash', async (req, res) => {
         return res.status(404).json({ error: 'Content not found' });
       }
 
-      const resourceUrl = `http://localhost:${PORT}/api/content/${hash}`;
+      const resourceUrl = `https://backend.shubh.sh/api/content/${hash}`;
       const accepts = [buildPaymentRequirements(resourceUrl, ADDRESS, AMOY_USDC_ADDRESS, content.price)];
       return res.status(402).json({ accepts });
     } catch (error) {
@@ -304,7 +304,7 @@ app.get('/a2a/content/:hash', async (req, res) => {
   try {
     // If no payment header, return 402 with payment requirements
     if (!clientPaymentHeader) {
-      const resourceUrl = `http://localhost:${PORT}/a2a/content/${hash}`;
+      const resourceUrl = `https://backend.shubh.sh/a2a/content/${hash}`;
 
       // Get content to determine the actual price
       try {

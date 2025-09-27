@@ -100,7 +100,7 @@ export default function Upload() {
       
       setProgress(30);
       
-      const response = await fetch(`http://localhost:8000${endpoint}`, {
+      const response = await fetch(`https://agent.shubh.sh${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export default function Upload() {
             description: "Trying alternative analysis endpoint...",
           });
           
-          const fallbackResponse = await fetch('http://localhost:8000/generate_keywords', {
+          const fallbackResponse = await fetch('https://agent.shubh.sh/generate_keywords', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -592,7 +592,7 @@ export default function Upload() {
         setProgress(50);
         
         // Call the API endpoint
-        const response = await fetch('http://localhost:5402/api/upload', {
+        const response = await fetch('https://backend.shubh.sh/api/upload', {
           method: 'POST',
           body: formData,
         });

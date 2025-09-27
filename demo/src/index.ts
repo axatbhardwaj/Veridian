@@ -1,12 +1,12 @@
-import { fetchContentByHash } from "./a2a.ts";
+import { fetchContentByHash } from "./a2a.js";
 import dotenv from "dotenv";
 dotenv.config();
 
 async function main() {
   const SERVICE_AGENT_URL =
-    process.env.SERVICE_AGENT_URL || "http://localhost:5402";
+    process.env.SERVICE_AGENT_URL || "https://backend.shubh.sh";
   const MATCH_TOPIC_URL =
-    process.env.MATCH_TOPIC_URL || "http://127.0.0.1:8000/match_topic";
+    process.env.MATCH_TOPIC_URL || "https://agent.shubh.sh/match_topic";
 
   const topic = "arch"; 
 

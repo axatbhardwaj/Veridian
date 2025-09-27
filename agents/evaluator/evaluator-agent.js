@@ -11,7 +11,7 @@ dotenv.config();
 // --- App Setup ---
 const app = express();
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://3.110.154.140:8080', 'http://localhost:3000', 'http://localhost:5173'],
+  origin: ['http://localhost:8080', 'https://veridian.shubh.sh' , 'https://backend.shubh.sh', 'https://agent.shubh.sh', 'http://3.110.154.140:8080', 'http://localhost:3000', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -23,7 +23,7 @@ const PORT = process.env.PORT || 8000;
 const MAX_MARKDOWN_BYTES = 256 * 1024; // 256 KB
 const MIN_PRICE_CENTS = 100; // $1.00
 const MAX_PRICE_CENTS = 500; // $5.00
-const RESOURCE_SERVER_URL = process.env.RESOURCE_SERVER_URL || 'http://localhost:5402';
+const RESOURCE_SERVER_URL = process.env.RESOURCE_SERVER_URL || 'https://backend.shubh.sh';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro';
