@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Content {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   // The markdown content
+  contentHash String   @unique // Keccak-256 hash of the content
+  userAddress String   // Ethereum wallet address
+  keywords    String   // Comma-separated keywords for SQLite compatibility
+  fileName    String   // Original file name
+  fileSize    Int      // File size in bytes
+  price       Int      // Price in cents
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("contents")
+}

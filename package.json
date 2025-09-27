@@ -1,0 +1,19 @@
+{
+  "name": "veridian-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "agents/evaluator",
+    "client/ai-lens-labs",
+    "demo",
+    "service"
+  ],
+  "scripts": {
+    "dev:evaluator": "bun --watch agents/evaluator/evaluator-agent.js",
+    "dev:service": "cd service && npm run dev",
+    "dev:client": "cd client/ai-lens-labs && bun run dev",
+    "dev": "npm run dev:evaluator & npm run dev:service & npm run dev:client",
+    "install:service": "cd service && npm install",
+    "db:setup": "cd service && npm run db:generate && npm run db:push"
+  }
+}
