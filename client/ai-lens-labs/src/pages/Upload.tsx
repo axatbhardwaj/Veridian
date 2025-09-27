@@ -142,7 +142,7 @@ export default function Upload() {
           
           const fallbackPrice = fallbackResult.price_per_call && fallbackResult.price_per_call > 0 
             ? fallbackResult.price_per_call 
-            : 0.01;
+            : 1.00;
             
           return {
             keywords: fallbackResult.keywords || [],
@@ -165,7 +165,7 @@ export default function Upload() {
       });
       
       // Handle both response formats and ensure valid price
-      let calculatedPrice = 0.01; // Default fallback price
+      let calculatedPrice = 1.00; // Default fallback price
       
       if (useNewEndpoint && result.price_usdc_cents) {
         calculatedPrice = result.price_usdc_cents / 100.0; // Convert cents to dollars
@@ -175,8 +175,8 @@ export default function Upload() {
       
       // Ensure price is always valid (greater than 0)
       if (!calculatedPrice || calculatedPrice <= 0) {
-        console.warn('Invalid price received from API, using fallback price of 0.01');
-        calculatedPrice = 0.01;
+        console.warn('Invalid price received from API, using fallback price of 1.00');
+        calculatedPrice = 1.00;
       }
       
       return {
