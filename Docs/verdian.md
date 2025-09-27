@@ -11,7 +11,8 @@ The system is composed of several microservices, a frontend, and a smart contrac
 *   **1. Frontend Application:**
     *   A web interface for creators to connect wallets, upload articles, and for consumers to browse the marketplace. Located in `client/ai-lens-labs`.
 *   **2. Smart Contract (Polygon Amoy):**
-    *   An ERC-721 (or Soul-Bound Token) contract that creates an on-chain, non-transferable representation of each piece of content, linking to a `keccak256` hash of the original work.
+    *   An ERC-721 (Soul-Bound Token) contract that creates an on-chain, non-transferable representation of each piece of content.
+    *   **Docs**: See `Docs/VerdianContentSBT.md` for a detailed breakdown of the contract.
 *   **3. Resource Server (Node.js/Express Backend):**
     *   The primary backend responsible for content ingestion, storage, and listing.
     *   It manages the database of articles, enforces the payment wall by issuing `HTTP 402` responses, and verifies payments.

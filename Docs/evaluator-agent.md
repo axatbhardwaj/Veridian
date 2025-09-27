@@ -3,24 +3,34 @@
 ---
 
 ### Overview
-- Minimal FastAPI service that evaluates markdown articles and returns a price and keywords.
+- Minimal Node.js/Express service that evaluates markdown articles and returns a price and keywords.
 - Uses Gemini first (if `GEMINI_API_KEY` is set), with a heuristic fallback.
 - Default Gemini model: `gemini-2.5-pro` (override via `GEMINI_MODEL`).
 
 ---
 
-### Quickstart
-```bash
-cd agents/evaluator
-python -m venv .venv && source .venv/bin/activate
-python -m pip install -r requirements.txt
-export GEMINI_API_KEY=YOUR_KEY   # optional; enables Gemini
-python -m uvicorn main:app --host 0.0.0.0 --port 8081
-```
+### Quickstart (Bun)
+
+This service is part of the Bun monorepo. To run it, first install dependencies from the project root.
+
+1.  **Install dependencies from root**:
+    ```bash
+    cd /path/to/veridian
+    bun install
+    ```
+
+2.  **Run the agent directly**:
+    ```bash
+    # Set GEMINI_API_KEY to enable Gemini features
+    export GEMINI_API_KEY=YOUR_KEY
+
+    # Run the service (defaults to port 8000)
+    bun run dev:evaluator
+    ```
 
 Health check:
 ```bash
-curl -s http://localhost:8081/healthz | jq
+curl -s http://localhost:8000/healthz | jq
 ```
 
 ---
@@ -38,7 +48,8 @@ curl -s http://localhost:8081/healthz | jq
 ```json
 {
   "price_usdc_cents": 300,
-  "keywords": ["zk", "rollups", "polygon"]
+  "keywords": ["zk", "rollups", "polygon"],
+  "gemini": true
 }
 ```
 
@@ -50,7 +61,8 @@ curl -s http://localhost:8081/healthz | jq
 ---
 
 ### Behavior
-- Gemini-first with response schema; returns strict JSON.
+- Gemini-first, expecting a JSON response.
+- Response includes `gemini: true` if AI was used, `gemini: false` if heuristics were used.
 - Fallback (if Gemini not configured/unavailable):
   - keywords: frequency-based (stopwords removed), up to 10, normalized to lowercase
   - price: based on word count and uniqueness ratio, clamped 100–500 cents
@@ -69,7 +81,7 @@ curl -s http://localhost:8081/healthz | jq
 - Environment variables
   - `GEMINI_API_KEY` (optional; enable Gemini path)
   - `GEMINI_MODEL` (default: `gemini-2.5-pro`)
-  - `PORT` (optional; default 8081)
+  - `PORT` (optional; default 8000)
 
 ---
 
@@ -84,20 +96,30 @@ curl -s http://localhost:8081/healthz | jq
 - Max markdown size is 256 KB.
 - Price is clamped to $1–$5 (100–500 cents).
 - Keywords are normalized to lowercase and limited to up to 10.
+- Response includes `gemini` boolean field indicating whether AI analysis was used.
 
 ---
 
-### Example: cURL (fish-safe)
+### Example: cURL
 ```bash
-jq -n --arg title 'My Article' --rawfile markdown /absolute/path/to/article.md '{title:$title, markdown:$markdown}' \
-| curl -sS http://localhost:8081/evaluate -H 'Content-Type: application/json' --data-binary @- \
+jq -n --arg title 'My Article' --rawfile markdown /path/to/article.md '{title:$title, markdown:$markdown}' \
+| curl -sS http://localhost:8000/evaluate -H 'Content-Type: application/json' --data-binary @- \
 | jq
 ```
 
-### Example: Python
-```python
-import requests, json, pathlib
-md = pathlib.Path('/absolute/path/to/article.md').read_text(encoding='utf-8')
-r = requests.post('http://localhost:8081/evaluate', json={'title':'My Article','markdown':md})
-print(json.dumps(r.json(), indent=2))
+### Example: JavaScript (Node)
+```javascript
+import axios from 'axios';
+import fs from 'fs/promises';
+
+async function evaluateArticle(filePath) {
+  const markdown = await fs.readFile(filePath, 'utf-8');
+  const response = await axios.post('http://localhost:8000/evaluate', {
+    title: 'My Article',
+    markdown: markdown,
+  });
+  console.log(JSON.stringify(response.data, null, 2));
+}
+
+evaluateArticle('/path/to/article.md');
 ``` 
