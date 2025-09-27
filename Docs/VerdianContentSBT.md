@@ -7,7 +7,7 @@
 - Mints one token per article and stores:
   - `title` (string)
   - `keywordsCsv` (comma-separated; up to 10 keywords)
-  - `priceUsdcCents` (100–500)
+  - `priceUsdcCents` (10–50)
   - `tokenURI` (string; should include or point to the content hash)
   - `contentHash` (bytes32; keccak256 of the original markdown bytes)
 - Enforces uniqueness by `contentHashToTokenId` (one token per unique content hash).
@@ -72,7 +72,7 @@ All transfer/approval methods revert:
 
 ### Metadata Conventions
 - `keywordsCsv`: comma-separated, lowercased; max ~10 entries.
-- `priceUsdcCents`: integer cents, 100–500.
+- `priceUsdcCents`: integer cents, 10–50.
 - `tokenURI`: should include or point to JSON with the `contentHash` and optionally article metadata; minimum viable approach is to embed a content-addressed URL (e.g., IPFS) or a backend URL that includes the keccak256.
 - `contentHash`: exactly `keccak256(uploaded_markdown_bytes)` computed server-side before minting.
 

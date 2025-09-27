@@ -25,20 +25,19 @@ Out of scope
 The system is composed of several decoupled services that communicate over HTTP:
 
 - **Frontend (React/Vite)**: UI for wallet connection, content upload, and marketplace browsing. Found in `client/ai-lens-labs`.
-- **Resource Server (Node/Express)**: The primary backend responsible for content storage, listing, and enforcing the 402 paywall. See `Docs/resource-server.md` for full details. Found in `client/ai-lens-labs/server`.
+- **Veridian Service (Node/Express)**: The unified backend responsible for content storage, listing, payment processing, and enforcing the 402 paywall. Combines Resource Server and Service Agent functionality. Found in `service/`.
 - **Evaluator Agent (Node/Express)**: A standalone microservice that uses AI (Gemini) to assign a fair price and relevant keywords to markdown content.
-- **Service Agent (Node/Express)**: An A2A (Application-to-Application) proxy that forwards payment-related headers (`X-PAYMENT`) from a client to the Resource Server.
-- **Client Agent (Demo Script)**: A script that orchestrates the discovery and purchase flow by calling the Evaluator Agent and then the Service Agent.
+- **Client Agent (Demo Script)**: A script that orchestrates the discovery and purchase flow by calling the Evaluator Agent and then the Veridian Service.
 - **Smart Contract (Solidity, Polygon Amoy)**: Non-transferable ERC-721-like content token storing `keccak256(content)` in metadata.
 - **x402 Facilitator**: External service that verifies payments and can issue payment receipts/tokens.
 
 Data flow
 1) **Discovery**: Client Agent calls Evaluator Agent's `/match_topic` endpoint to find the hash of relevant content.
-2) **First Request**: Client Agent requests content from the Service Agent (`/a2a/content/:hash`), which proxies the request to the Resource Server.
-3) **Invoice**: The Resource Server responds with a `402 Payment Required` and invoice details. The Service Agent forwards this response to the Client.
+2) **First Request**: Client Agent requests content from the Veridian Service (`/a2a/content/:hash`).
+3) **Invoice**: The Veridian Service responds with a `402 Payment Required` and invoice details with the actual content price.
 4) **Payment**: Client Agent pays the invoice (e.g., via a facilitator) and receives a payment payload.
-5) **Authorized Request**: Client Agent retries the request to the Service Agent, this time including an `X-PAYMENT` header with the payment payload.
-6) **Verification & Delivery**: The Service Agent forwards the request. The Resource Server verifies the payment and, if valid, returns the full content, which is then forwarded back to the Client.
+5) **Authorized Request**: Client Agent retries the request to the Veridian Service, this time including an `X-PAYMENT` header with the payment payload.
+6) **Verification & Delivery**: The Veridian Service verifies the payment and, if valid, returns the full content directly.
 
 ---
 
@@ -65,25 +64,17 @@ Non-goals
 
 ### Core Services
 
-#### Resource Server (Node/Express)
-- **Implementation**: `client/ai-lens-labs/server`
-- **Stack**: Node.js, Express, Prisma
+#### Veridian Service (Unified Backend)
+- **Implementation**: `service/`
+- **Stack**: Node.js, Express, Prisma, SQLite
 - **Responsibilities**:
   - Content ingestion, validation, and storage.
   - Providing a public discovery API (`/api/content-hashes-keywords`).
   - Enforcing the 402 paywall on protected content endpoints.
   - Verifying payment payloads received in the `X-PAYMENT` header.
-- **Documentation**: See `Docs/resource-server.md` for detailed setup and API specifications.
-
-#### Service Agent (A2A Proxy)
-- **Implementation**: `service/`
-- **Stack**: Node.js, Express
-- **Responsibilities**:
-  - Expose an `/a2a/content/:hash` endpoint.
-  - Proxy all requests to the `RESOURCE_SERVER_URL`.
-  - Forward the `X-PAYMENT` header from the client to the resource server.
-  - Forward the `X-PAYMENT-RESPONSE` header from the resource server back to the client.
-  - Propagate errors and status codes (like 402) from the resource server.
+  - Payment processing and settlement.
+  - Database management with Prisma ORM.
+- **Documentation**: See `service/README.md` for detailed setup and API specifications.
 
 #### Evaluator Agent (AI Service)
 - **Implementation**: `agents/evaluator/`
@@ -107,11 +98,11 @@ Non-goals
 ---
 
 ### Payment Integration (X-PAYMENT Header)
-- When content access is requested, the **Resource Server** (via the Service Agent proxy) returns HTTP 402.
+- When content access is requested, the **Veridian Service** returns HTTP 402.
 - After payment, the client retries with an `X-PAYMENT` header containing a base64-encoded payment payload.
-- The Resource Server is responsible for decoding and verifying this payload. The Service Agent only forwards it.
+- The Veridian Service is responsible for decoding and verifying this payload.
 
-Example 402 (from Resource Server)
+Example 402 (from Veridian Service)
 ```http
 HTTP/1.1 402 Payment Required
 WWW-Authenticate: X-402 realm="Verdian", chain="Polygon-Amoy", recipient="0xRecipient", amount="2.00", currency="USDC", memo="content:123", invoice_id="abc123"
@@ -120,7 +111,7 @@ Content-Type: application/json
 {"error":"payment_required","content_id":123}
 ```
 
-Example authorized request (to Service Agent)
+Example authorized request (to Veridian Service)
 ```http
 GET /a2a/content/<hash>
 X-PAYMENT: eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9....
@@ -129,7 +120,7 @@ X-PAYMENT: eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9....
 ---
 
 ### Data Model (SQLite)
-This data model would reside within the **Resource Server**.
+This data model resides within the **Veridian Service**.
 - `articles`
   - `id` (int, pk)
   - `title` (text)
@@ -157,14 +148,14 @@ Storage
 
 ### API Specification
 
-The primary APIs are exposed by the **Resource Server**. The Service Agent only proxies `/a2a/content/:hash` to the Resource Server's `/api/content/:hash` endpoint.
+The primary APIs are exposed by the **Veridian Service** at endpoints like `/api/content/:hash` and `/a2a/content/:hash`.
 
-See `Docs/resource-server.md` for a complete API specification.
+See `service/README.md` for a complete API specification.
 
 ---
 
 ### Evaluator Agent (Service)
-- Purpose: Assign price ($1–$5 USD) and 2–3 keywords for uploaded markdown.
+- Purpose: Assign price ($0.10–$0.50 USD) and 2–3 keywords for uploaded markdown.
 - Deployment: Separate Node.js/Express microservice.
 - Interface:
   - POST `/evaluate`
@@ -178,7 +169,7 @@ See `Docs/resource-server.md` for a complete API specification.
   - 400 on invalid input; 500 on internal errors.
 - **Integration**:
   - Called directly by the Client Agent for content discovery (`/match_topic`).
-  - Can also be called by the Resource Server during content ingestion (`/evaluate`).
+  - Can also be called by the Veridian Service during content ingestion (`/evaluate`).
 
 ---
 
@@ -198,7 +189,7 @@ See `Docs/resource-server.md` for a complete API specification.
 - **Implementation**: `demo/` script
 - **Flow**:
   - Calls `MATCH_TOPIC_URL` (Evaluator) to get a content hash from the `/match_topic` endpoint.
-  - The Evaluator in turn calls the Resource Server's `/api/content-hashes-keywords` endpoint.
+  - The Evaluator in turn calls the Veridian Service's `/api/content-hashes-keywords` endpoint.
   - The Client Agent then calls the `SERVICE_AGENT_URL` to fetch the content.
   - Handles the 402 response by creating and sending a demo payment payload in the `X-PAYMENT` header on the retry.
 
@@ -207,7 +198,7 @@ See `Docs/resource-server.md` for a complete API specification.
 ### Security & Validation
 - Compute and persist `keccak256` of exact uploaded bytes; re-check before mint to ensure integrity.
 - Enforce non-transferability at contract level (SBT semantics).
-- Verify payment payloads on the Resource Server; never trust client claims.
+- Verify payment payloads on the Veridian Service; never trust client claims.
 - Validate filenames, size limits (e.g., 256 KB) and content type.
 - Do not store private keys in repo; load from env; use minimal signer.
 
@@ -215,10 +206,9 @@ See `Docs/resource-server.md` for a complete API specification.
 
 ### Local Dev & Run
 See the individual `README.md` or documentation in `Docs/` for each component. A typical setup involves running:
-1.  The **Resource Server** on port 3001.
+1.  The **Veridian Service** on port 5402.
 2.  The **Evaluator Agent** on port 8000.
-3.  The **Service Agent** on port 5402.
-4.  The **Client Agent** script to orchestrate the flow.
+3.  The **Client Agent** script to orchestrate the flow.
 
 ---
 
@@ -231,13 +221,13 @@ See the individual `README.md` or documentation in `Docs/` for each component. A
 ---
 
 ### Build Steps
-- The primary components (**Resource Server**, **Evaluator Agent**, **Service Agent**, **Client Agent**) are already implemented.
+- The primary components (**Veridian Service**, **Evaluator Agent**, **Client Agent**) are already implemented.
 - Setup and run each service according to its documentation.
 - The **Creator Agent** is a conceptual feature to be implemented.
 - A **Frontend** exists but may need wiring to the backend services.
 
 Deliverables
-- Running services (Evaluator, Service Agent, Resource Server)
+- Running services (Evaluator Agent, Veridian Service)
 - Client Agent script
 - Documentation for all components
 
@@ -246,9 +236,9 @@ Deliverables
 ### Demo Script (Show in 3–4 minutes)
 1) Client agent is run with a "topic".
 2) Client agent calls Evaluator to find the best matching content hash.
-3) Client agent calls Service Agent to fetch content, gets a 402.
+3) Client agent calls Veridian Service to fetch content, gets a 402.
 4) Client agent creates a demo payment and retries with an `X-PAYMENT` header.
-5) Service agent forwards this to the Resource Server, which verifies it and returns the content.
+5) Veridian Service verifies the payment and returns the content.
 
 ---
 

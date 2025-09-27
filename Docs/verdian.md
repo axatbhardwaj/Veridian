@@ -13,24 +13,20 @@ The system is composed of several microservices, a frontend, and a smart contrac
 *   **2. Smart Contract (Polygon Amoy):**
     *   An ERC-721 (Soul-Bound Token) contract that creates an on-chain, non-transferable representation of each piece of content.
     *   **Docs**: See `Docs/VerdianContentSBT.md` for a detailed breakdown of the contract.
-*   **3. Resource Server (Node.js/Express Backend):**
-    *   The primary backend responsible for content ingestion, storage, and listing.
-    *   It manages the database of articles, enforces the payment wall by issuing `HTTP 402` responses, and verifies payments.
-    *   **Implementation**: `client/ai-lens-labs/server/`
-    *   **Docs**: `Docs/resource-server.md`
+*   **3. Veridian Service (Node.js/Express Backend):**
+    *   The unified backend responsible for content ingestion, storage, listing, and payment processing.
+    *   Manages the database of articles, enforces the payment wall by issuing `HTTP 402` responses, and verifies payments.
+    *   **Implementation**: `service/`
+    *   **Docs**: See technical implementation details below
 *   **4. Evaluator Agent (Node.js/Express):**
     *   A dedicated AI microservice that handles content analysis, price suggestions, and discovery.
     *   **Implementation**: `agents/evaluator/`
     *   **Docs**: `Docs/evaluator-agent.md`
-*   **5. Service Agent (Node.js/Express):**
-    *   A lightweight, stateless A2A (Application-to-Application) proxy.
-    *   Its sole responsibility is to forward payment headers (like `X-PAYMENT`) from the Client Agent to the Resource Server.
-    *   **Implementation**: `service/`
-*   **6. Client Agent (Demo Script):**
+*   **5. Client Agent (Demo Script):**
     *   An autonomous script that demonstrates the consumer-side workflow.
-    *   It orchestrates the process of discovering content (via the Evaluator Agent) and then purchasing it (via the Service Agent).
+    *   It orchestrates the process of discovering content (via the Evaluator Agent) and then purchasing it (via the Veridian Service).
     *   **Implementation**: `demo/`
-*   **7. x402 Facilitator:**
+*   **6. x402 Facilitator:**
     *   An external service that can monitor the Polygon network, verify payments, and issue payment receipts or tokens.
 
 ---
@@ -38,20 +34,19 @@ The system is composed of several microservices, a frontend, and a smart contrac
 ### **Key System Flows**
 
 #### **Flow 1: The Content Creator's Journey**
-> **Note**: The frontend for this flow is implemented, but the API calls to the Resource Server's `/api/upload` endpoint may need to be wired.
 
 1.  **Upload:** A creator uses the frontend to upload a markdown file.
-2.  **AI Evaluation:** The frontend can call the **Evaluator Agent** to get a suggested price and keywords.
-3.  **Submission:** The creator submits the file, title, price, and keywords to the **Resource Server's** `/api/upload` endpoint.
-4.  **Listing for Sale:** The Resource Server saves the content and its metadata, making it available for purchase.
+2.  **AI Evaluation:** The frontend calls the **Evaluator Agent** to get a suggested price and keywords.
+3.  **Submission:** The creator submits the file, title, price, and keywords to the **Veridian Service's** `/api/upload` endpoint.
+4.  **Listing for Sale:** The Veridian Service saves the content and its metadata, making it available for purchase.
 
 #### **Flow 2: The Client Agent's Automated Purchase**
 
 1.  **Discovery:** The **Client Agent**, given a topic, calls the **Evaluator Agent's** `/match_topic` endpoint to find the hash of the most relevant article.
-2.  **Selection & Payment Request:** The Client Agent makes a request for the content via the **Service Agent**, which proxies it to the **Resource Server**.
-3.  **Invoice:** The **Resource Server** responds with an **HTTP 402 Payment Required** error, including invoice details in the response. The Service Agent forwards this back to the Client Agent.
+2.  **Selection & Payment Request:** The Client Agent makes a request for the content via the **Veridian Service**.
+3.  **Invoice:** The **Veridian Service** responds with an **HTTP 402 Payment Required** error, including invoice details in the response.
 4.  **Payment and Verification:**
     *   The Client Agent arranges payment (e.g., via the **Facilitator** or by creating a signed payload).
     *   The Facilitator, after on-chain confirmation, can return a receipt or signed token.
-5.  **Content Access:** The Client Agent retries the *same request* to the **Service Agent**, but this time includes the payment receipt in an `X-PAYMENT` header.
-6.  **Delivery:** The Service Agent forwards the request. The **Resource Server** verifies the payment payload and, upon success, delivers the full markdown content.
+5.  **Content Access:** The Client Agent retries the *same request* to the **Veridian Service**, but this time includes the payment receipt in an `X-PAYMENT` header.
+6.  **Delivery:** The **Veridian Service** verifies the payment payload and, upon success, delivers the full markdown content.

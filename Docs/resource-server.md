@@ -3,9 +3,9 @@
 ---
 
 ### Overview
-- The Resource Server is the primary backend for the Verdian platform, responsible for content management, persistence, and enforcing the payment paywall.
-- It is a Node.js application built with Express, using Prisma as an ORM for database interaction.
-- This server is the ultimate destination for requests proxied by the **Service Agent**.
+- **DEPRECATED**: The Resource Server functionality has been merged into the unified **Veridian Service**.
+- The Veridian Service now handles content management, persistence, payment processing, and the payment paywall.
+- See `service/README.md` for the current unified backend implementation.
 
 ---
 
@@ -19,57 +19,36 @@
 
 ### Setup & Run
 
-1.  **Navigate to the server directory**:
-    ```bash
-    cd client/ai-lens-labs/server
-    ```
+**⚠️ DEPRECATED**: Use the unified **Veridian Service** instead.
 
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+**Migration**: The Resource Server functionality has been merged into the Veridian Service located at `service/`.
 
-3.  **Setup the database**:
-    This command will create the SQLite database file and the necessary tables based on the schema in `prisma/schema.prisma`.
-    ```bash
-    npx prisma db push
-    ```
+**To run the current backend**:
+```bash
+cd service
+npm install
+npm run db:generate
+npm run db:push
+npm run dev
+```
 
-4.  **Set environment variables**:
-    Create a `.env` file in the `server` directory or export these variables:
-    ```
-    # The port for the server to run on
-    PORT=3001
-
-    # The payment address for invoices
-    ADDRESS=0xA7635CdB2B835737FdcE78Ea22F06Fb78101110f
-
-    # The URL for the x402 Facilitator service
-    FACILITATOR_URL=http://localhost:5401
-
-    # The smart contract address for the asset being traded (e.g., USDC on Amoy)
-    AMOY_USDC_ADDRESS=0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582
-    ```
-
-5.  **Run the server**:
-    ```bash
-    npm start
-    ```
-    The server will be running at `http://localhost:3001`.
+The unified service runs on `http://localhost:5402` and includes all Resource Server functionality.
 
 ---
 
 ### API Endpoints
 
-#### `GET /health`
+#### `GET /healthz` (Updated Endpoint)
 - **Description**: A simple health check endpoint.
+- **Available at**: `http://localhost:5402/healthz`
 - **Response**:
     ```json
-    { "status": "OK", "message": "Server is running" }
+    { "status": "ok", "service": "veridian-service" }
     ```
 
 #### `POST /api/upload`
 - **Description**: Uploads a new markdown file, calculates its hash, and saves its metadata to the database. It expects a multipart/form-data request.
+- **Available at**: `http://localhost:5402/api/upload`
 - **Form Fields**:
     - `file`: The `.md` markdown file.
     - `title`: `string` - The title of the article.
@@ -97,6 +76,7 @@
 
 #### `GET /api/content-hashes-keywords`
 - **Description**: Returns a list of all content with just their hash and keywords. This is used by the **Evaluator Agent** for discovery.
+- **Available at**: `http://localhost:5402/api/content-hashes-keywords`
 - **Success Response (`200 OK`)**:
     ```json
     [
@@ -107,6 +87,7 @@
 
 #### `GET /api/content/:hash`
 - **Description**: The main paywalled endpoint for retrieving full content.
+- **Available at**: `http://localhost:5402/api/content/:hash`
 - **Behavior**:
     1.  **If `X-PAYMENT` header is NOT present**:
         - Returns `HTTP 402 Payment Required`.
