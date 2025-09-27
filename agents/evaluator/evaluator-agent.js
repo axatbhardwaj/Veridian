@@ -16,8 +16,8 @@ app.use(bodyParser.json());
 // --- Constants & Config ---
 const PORT = process.env.PORT || 8000;
 const MAX_MARKDOWN_BYTES = 256 * 1024; // 256 KB
-const MIN_PRICE_CENTS = 100; // $1.00
-const MAX_PRICE_CENTS = 500; // $5.00
+const MIN_PRICE_CENTS = 10; // $0.10
+const MAX_PRICE_CENTS = 50; // $0.50
 const RESOURCE_SERVER_URL = process.env.RESOURCE_SERVER_URL || 'http://localhost:5402';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
