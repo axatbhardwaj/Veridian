@@ -1,4 +1,6 @@
 import { fetchContentByHash } from "./a2a.ts";
+import dotenv from "dotenv";
+dotenv.config();
 
 async function main() {
   const SERVICE_AGENT_URL =
