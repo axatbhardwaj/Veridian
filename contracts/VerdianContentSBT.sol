@@ -14,6 +14,8 @@ contract VerdianContentSBT {
     error TokenDoesNotExist();
     error DuplicateContentHash();
     error NotOwner();
+    error InvalidPrice();
+    error InsufficientPayment();
 
     // ------------------------
     // Events
@@ -27,14 +29,15 @@ contract VerdianContentSBT {
     );
 
     // ------------------------
-    // Storage
-    // ------------------------
-    address public immutable contractOwner;
-    string private _name;
-    string private _symbol;
+// Storage
+// ------------------------
+address public immutable contractOwner;
+string private _name;
+string private _symbol;
 
-    uint256 private _tokenCount; // token IDs start at 1
+uint256 private _tokenCount; // token IDs start at 1
 
+uint256 public mintFeeWei;
     mapping(uint256 => address) private _ownerOf;
     mapping(address => uint256) private _balanceOf;
 
@@ -51,10 +54,11 @@ contract VerdianContentSBT {
     // ------------------------
     // Constructor
     // ------------------------
-    constructor(string memory name_, string memory symbol_) {
+    constructor(string memory name_, string memory symbol_, uint256 mintFeeWei_) {
         contractOwner = msg.sender;
         _name = name_;
         _symbol = symbol_;
+        mintFeeWei = mintFeeWei_;
     }
 
     // ------------------------
@@ -69,20 +73,20 @@ contract VerdianContentSBT {
     // Mint
     // ------------------------
     function mint(
-        address to,
         string memory title,
         string memory keywordsCsv,
         string memory tokenUri,
         bytes32 contentHash,
         uint256 priceUsdcCents
-    ) external onlyOwner returns (uint256 tokenId) {
-        if (to == address(0)) revert ZeroAddress();
+    ) external payable returns (uint256 tokenId) {
         if (contentHashToTokenId[contentHash] != 0) revert DuplicateContentHash();
+        if (priceUsdcCents < 100 || priceUsdcCents > 500) revert InvalidPrice();
+        if (msg.value < mintFeeWei) revert InsufficientPayment();
 
         tokenId = _nextTokenId();
 
-        _ownerOf[tokenId] = to;
-        _balanceOf[to] += 1;
+        _ownerOf[tokenId] = msg.sender;
+        _balanceOf[msg.sender] += 1;
         _titleOf[tokenId] = title;
         _keywordsCsvOf[tokenId] = keywordsCsv;
         _tokenUriOf[tokenId] = tokenUri;
@@ -90,8 +94,8 @@ contract VerdianContentSBT {
         _priceCentsOf[tokenId] = priceUsdcCents;
         contentHashToTokenId[contentHash] = tokenId;
 
-        emit Transfer(address(0), to, tokenId);
-        emit ContentMinted(to, tokenId, contentHash, priceUsdcCents);
+        emit Transfer(address(0), msg.sender, tokenId);
+        emit ContentMinted(msg.sender, tokenId, contentHash, priceUsdcCents);
     }
 
     function _nextTokenId() internal returns (uint256) {
@@ -184,6 +188,28 @@ contract VerdianContentSBT {
 
     function isApprovedForAll(address, address) external pure returns (bool) {
         return false;
+    }
+
+    // ------------------------
+    // Admin
+    // ------------------------
+    function setMintFeeWei(uint256 newFee) external onlyOwner {
+        mintFeeWei = newFee;
+    }
+
+    function withdraw(address payable to, uint256 amount) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+        if (amount == 0) return;
+        (bool ok, ) = to.call{value: amount}("");
+        require(ok, "ETH_TRANSFER_FAIL");
+    }
+
+    function withdrawAll(address payable to) external onlyOwner {
+        if (to == address(0)) revert ZeroAddress();
+        uint256 bal = address(this).balance;
+        if (bal == 0) return;
+        (bool ok, ) = to.call{value: bal}("");
+        require(ok, "ETH_TRANSFER_FAIL");
     }
 
     // ------------------------
