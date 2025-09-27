@@ -230,9 +230,23 @@ app.get('/api/content/:hash', async (req, res) => {
   const paymentHeader = req.headers['x-payment'];
 
   if (!paymentHeader) {
-    const resourceUrl = `http://localhost:${PORT}/api/content/${req.params.hash}`;
-    const accepts = [buildPaymentRequirements(resourceUrl, ADDRESS, AMOY_USDC_ADDRESS)];
-    return res.status(402).json({ accepts });
+    const { hash } = req.params;
+
+    // Get content to determine the actual price
+    try {
+      const content = await prisma.content.findUnique({ where: { contentHash: hash } });
+
+      if (!content) {
+        return res.status(404).json({ error: 'Content not found' });
+      }
+
+      const resourceUrl = `http://localhost:${PORT}/api/content/${hash}`;
+      const accepts = [buildPaymentRequirements(resourceUrl, ADDRESS, AMOY_USDC_ADDRESS, content.price)];
+      return res.status(402).json({ accepts });
+    } catch (error) {
+      console.error('Error fetching content for payment requirements:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
   }
 
   try {
@@ -291,8 +305,21 @@ app.get('/a2a/content/:hash', async (req, res) => {
     // If no payment header, return 402 with payment requirements
     if (!clientPaymentHeader) {
       const resourceUrl = `http://localhost:${PORT}/a2a/content/${hash}`;
-      const accepts = [buildPaymentRequirements(resourceUrl, ADDRESS, AMOY_USDC_ADDRESS)];
-      return res.status(402).json({ accepts });
+
+      // Get content to determine the actual price
+      try {
+        const content = await prisma.content.findUnique({ where: { contentHash: hash } });
+
+        if (!content) {
+          return res.status(404).json({ error: 'Content not found' });
+        }
+
+        const accepts = [buildPaymentRequirements(resourceUrl, ADDRESS, AMOY_USDC_ADDRESS, content.price)];
+        return res.status(402).json({ accepts });
+      } catch (error) {
+        console.error('Error fetching content for payment requirements:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
     }
 
     // Verify payment

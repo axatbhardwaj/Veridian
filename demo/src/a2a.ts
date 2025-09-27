@@ -14,13 +14,17 @@ export async function fetchContentByHash(serviceUrl: string, hash: string) {
       const first = Array.isArray(accepts) ? accepts[0] : accepts;
       if (!first) throw new Error("No payment requirements provided");
 
-      const value =
-        process.env.PAYMENT_AMOUNT || first.maxAmountRequired || "10000";
+      // Use the actual content price from maxAmountRequired (in cents)
+      const centsValue = first.maxAmountRequired || process.env.PAYMENT_AMOUNT || "10000";
+
+      // Convert cents to USDC units (USDC has 6 decimals, so cents * 10000)
+      const usdcValue = (parseInt(centsValue) * 10000).toString();
+
       const payment = await createDemoPaymentPayload(
         process.env.PRIVATE_KEY_ADDRESS ||
           "0xA7635CdB2B835737FdcE78Ea22F06Fb78101110f",
         first.payTo,
-        value,
+        usdcValue,
         first.asset || "0xVerifier"
       );
 
