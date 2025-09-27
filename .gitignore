@@ -1,4 +1,7 @@
 ### Node ###
+cache/
+artifacts/
+
 # Logs
 logs
 *.log
