@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -11,7 +12,10 @@ app.use(bodyParser.json());
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5401;
 const AMOY_RPC_URL = process.env.AMOY_RPC_URL || 'https://rpc-amoy.polygon.technology';
 // Prefer explicit facilitator key env var
-const PRIVATE_KEY = process.env.FACILITATOR_PRIVATE_KEY || process.env.PRIVATE_KEY || '0x95a79e8336434ff65801b2dd78d4f0d921c06d9d648a2e4e462174a58d5ebe0a';
+const PRIVATE_KEY = process.env.FACILITATOR_PRIVATE_KEY || process.env.PRIVATE_KEY;
+if (!PRIVATE_KEY) {
+  throw new Error('FACILITATOR_PRIVATE_KEY or PRIVATE_KEY environment variable is required');
+}
 const REAL_SETTLE = true;
 const AMOY_USDC_ADDRESS = process.env.AMOY_USDC_ADDRESS || '';
 
