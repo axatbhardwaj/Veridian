@@ -18,7 +18,7 @@ The system is composed of several microservices, a frontend, and a smart contrac
     *   It manages the database of articles, enforces the payment wall by issuing `HTTP 402` responses, and verifies payments.
     *   **Implementation**: `client/ai-lens-labs/server/`
     *   **Docs**: `Docs/resource-server.md`
-*   **4. Evaluator Agent (FastAPI/Python):**
+*   **4. Evaluator Agent (Node.js/Express):**
     *   A dedicated AI microservice that handles content analysis, price suggestions, and discovery.
     *   **Implementation**: `agents/evaluator/`
     *   **Docs**: `Docs/evaluator-agent.md`
